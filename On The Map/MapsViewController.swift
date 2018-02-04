@@ -59,7 +59,7 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
             
             performUIUpdatesOnMain {
                 self.pointsMapView.removeAnnotations(self.pointsArray)
-                SharedManager.sharedInstance.locationsDictionary = response as? [StudentInformation]
+                SharedManager.sharedInstance.locationsDictionary = response
                 self.pointsArray = self.mainController.createMapAnnotations(true, nil)
                 self.pointsMapView.addAnnotations(self.pointsArray)
             }
@@ -80,9 +80,14 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
             let app = UIApplication.shared
             if let toOpen = view.annotation?.subtitle! {
                 let mURL = (toOpen.contains("http") ? URL(string: toOpen) : URL(string: "http://\(toOpen)"))
-                if app.canOpenURL(mURL!) {
-                    app.open(mURL!, options: [:], completionHandler: nil)
+                if let mURL = mURL {
+                    if app.canOpenURL(mURL) {
+                        app.open(mURL, options: [:], completionHandler: nil)
+                    }
+                }else{
+                    self.mainController.createAlertWithOkButton("Link Error", "Link is not Valid!", self)
                 }
+             
             }
         }
     }

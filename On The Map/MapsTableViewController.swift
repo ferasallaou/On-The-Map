@@ -12,13 +12,13 @@ class MapsTableViewController: UIViewController {
 
     let parseClient = ParseClient()
     let appDelegate = AppDelegate()
-    var mLocationsArray:[StudentInformation] = [StudentInformation]()
+    
     let mainController = MainClient()
     
     @IBOutlet weak var pointsTable: UITableView!
     override func viewDidLoad() {
         super.viewDidLoad()
-        mLocationsArray = SharedManager.sharedInstance.locationsDictionary!
+        
         // Do any additional setup after loading the view.
     }
 
@@ -38,7 +38,6 @@ class MapsTableViewController: UIViewController {
             
             performUIUpdatesOnMain {
                 SharedManager.sharedInstance.locationsDictionary = response as? [StudentInformation]
-                self.mLocationsArray = response as! [StudentInformation]
                 self.pointsTable.reloadData()
             }
         }

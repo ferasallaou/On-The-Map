@@ -12,33 +12,37 @@ import UIKit
 extension MapsTableViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return mLocationsArray.count
+        return (SharedManager.sharedInstance.locationsDictionary?.count)!
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let myCell = UITableViewCell(style: .subtitle, reuseIdentifier: "mapsCell")
-        let points = mLocationsArray[indexPath.row]
+        let points = SharedManager.sharedInstance.locationsDictionary![indexPath.row]
 
-        let firstName = (points.firstName as? String == nil ? "NO Name" : points.firstName as? String)
-        let lastName = (points.lastName as? String == nil ? "NO Name" : points.lastName as? String)
-        let mediaURL = (points.mediaURL as? String == nil ? "NO LINK" : points.mediaURL as? String)
+        let firstName = (points.firstName == nil ? "NO Name" : points.firstName)
+        let lastName = (points.lastName == nil ? "NO Name" : points.lastName)
+        let mediaURL = (points.mediaURL == nil ? "NO LINK" : points.mediaURL)
         
         
-        myCell.textLabel?.text = "\(firstName!) \(lastName!)"
+        myCell.textLabel?.text = "\(firstName) \(lastName)"
         myCell.imageView?.image = UIImage(named: "icon_pin")
         myCell.detailTextLabel?.text = mediaURL
         return myCell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let getRow = mLocationsArray[indexPath.row]
+        let getRow = SharedManager.sharedInstance.locationsDictionary![indexPath.row]
         
         let app = UIApplication.shared
         
         if let linkToOpen = getRow.mediaURL as? String {
             let mURL = (linkToOpen.contains("http") ? URL(string: linkToOpen) : URL(string: "http://\(linkToOpen)"))
-            if app.canOpenURL(mURL!) {
-                app.open(mURL!, options: [:], completionHandler: nil)
+            if let mURL = mURL {
+                if app.canOpenURL(mURL) {
+                    app.open(mURL, options: [:], completionHandler: nil)
+                }
+            }else{
+                self.mainController.createAlertWithOkButton("Link Error", "Link is not Valid!", self)
             }
         }
         
