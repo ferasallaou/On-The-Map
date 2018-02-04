@@ -8,7 +8,7 @@
 
 import UIKit
 
-class LoginViewController: UIViewController {
+class LoginViewController: UIViewController, UITextFieldDelegate {
 
     let udacityClient = UdacityClient()
     var appDelegate = AppDelegate()
@@ -24,6 +24,8 @@ class LoginViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tweakUI(true)
+        self.emailTextField.delegate = self
+        self.passwordTextField.delegate = self
         // Do any additional setup after loading the view, typically from a nib.
     }
 
@@ -31,9 +33,9 @@ class LoginViewController: UIViewController {
     @IBAction func loginUsingUdacity(_ sender: Any) {
         tweakUI(false)
         responseLable.text = ""
-       let emailAddress:String? = (emailTextField.text!.isEmpty ? nil : emailTextField.text)
+        let emailAddress:String? = (emailTextField.text!.isEmpty ? nil : emailTextField.text)
         let password:String? = (passwordTextField.text!.isEmpty ? nil : passwordTextField.text)
-        
+
         if  emailAddress == nil || password == nil {
             responseLable.text = "Please fill in your Email & Password"
             self.tweakUI(true)
@@ -49,9 +51,10 @@ class LoginViewController: UIViewController {
                 }
                 
                 guard rejected == nil else {
-                    printError("Please check your login Credentials")
+                    printError(rejected!)
                     return
                 }
+                
                 
                 self.appDelegate.sessionID = success!["sessionID"] as? String
                 let userID = success!["accountID"] as! String
@@ -63,19 +66,14 @@ class LoginViewController: UIViewController {
                         self.tweakUI(true)
                         return
                     }
+                            
+                    SharedManager.sharedInstance.publicUserData?["firstName"] = success!["first_name"] as AnyObject
+                    SharedManager.sharedInstance.publicUserData?["lastName"] = success!["last_name"] as AnyObject
+                    SharedManager.sharedInstance.publicUserData?["uniqueKey"] = "\(success!["first_name"]!)\(success!["last_name"]!)" as AnyObject
                     
-                    guard let userData = success!["user"] else {
-                        printError("Couldn't get Data")
-                        self.tweakUI(true)
-                        return
-                    }
-                    
-                    SharedManager.sharedInstance.publicUserData?["firstName"] = userData["first_name"] as AnyObject
-                    SharedManager.sharedInstance.publicUserData?["lastName"] = userData["last_name"] as AnyObject
-                    SharedManager.sharedInstance.publicUserData?["uniqueKey"] = "\(userData["first_name"]!!)\(userData["last_name"]!!)" as AnyObject
                 }
                 
-                self.parseClient.getStudentsLocation(nil, nil, "-updatedAt",nil) {
+                self.parseClient.getStudentsLocation(100, nil, "-updatedAt",nil) {
                     (success, rejected) in
                     
                     guard rejected == nil else {
@@ -85,9 +83,9 @@ class LoginViewController: UIViewController {
                     }
                     
                     
-                   SharedManager.sharedInstance.locationsDictionary = success as? [AnyObject]
+                   SharedManager.sharedInstance.locationsDictionary = success as? [StudentInformation]
                     let completeLogin = self.storyboard!.instantiateViewController(withIdentifier: "tabsVC")
-                    //completeLogin.locationsArray = dataObj as! [[String: AnyObject]]
+                    self.tweakUI(true)
                     performUIUpdatesOnMain {
                         self.present(completeLogin, animated: true, completion: nil)
                     }
@@ -98,10 +96,18 @@ class LoginViewController: UIViewController {
     }
  
     func tweakUI(_ enable: Bool){
-        self.loginBtn.isEnabled =  enable
-        self.passwordTextField.isEnabled = enable
-        self.emailTextField.isEnabled = enable
-        self.loadingImage.isHidden = enable
+        performUIUpdatesOnMain {
+            self.loginBtn.isEnabled =  enable
+            self.passwordTextField.isEnabled = enable
+            self.emailTextField.isEnabled = enable
+            self.loadingImage.isHidden = enable
+        }
+        
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }
 

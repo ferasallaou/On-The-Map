@@ -1,5 +1,5 @@
 //
-//  MainController.swift
+//  MainClient.swift
 //  On The Map
 //
 //  Created by Feras Allaou on 1/23/18.
@@ -9,13 +9,14 @@
 import Foundation
 import MapKit
 
-class MainController {
+class MainClient {
     
     let constants = Methods.init()
     let session = AppDelegate().session
-
+    
+    
     // A Method to Make Post Request Regardless of the Client
-    func makePostRequest(_ method: String, _ parameters:[String:AnyObject], _ jsonBody:Data, _ isUdacityClient: Bool = true, _ completionHandler: @escaping (_ result:[String: AnyObject]?, _ error: NSError?) -> Void){
+    func makePostRequest(_ method: String, _ parameters:[String:AnyObject], _ jsonBody:Data, _ isUdacityClient: Bool = true, _ completionHandler: @escaping (_ result:[String: AnyObject]?, _ error: String?) -> Void){
         
         let mURL = URL(string: method)
         var request = NSMutableURLRequest(url: mURL!)
@@ -31,13 +32,13 @@ class MainController {
             (data, code, error) in
 
             func displayError(_ error: String){
-                let _error = NSError(domain: "makePostRequest", code: 1, userInfo: ["errorMSG": error])
+                let _error = "\(error)"
                 print("MakePostRequest Error: \(error)")
                 completionHandler(nil, _error)
             }
             
             guard error == nil else {
-                displayError(error.debugDescription)
+                displayError("\(error!.localizedDescription)")
                 return
             }
             
@@ -203,16 +204,17 @@ class MainController {
         if fromSahred {
             for points in SharedManager.sharedInstance.locationsDictionary!{
                 
-                let lat = CLLocationDegrees(points["latitude"] as! Double)
-                let long = CLLocationDegrees(points["longitude"] as! Double)
+                let lat = CLLocationDegrees(points.latitude)
+                let long = CLLocationDegrees(points.longitude)
                 let coordinations = CLLocationCoordinate2D(latitude: lat, longitude: long)
-                let firstName = (points["firstName"] as? String == nil ? "NO Name" : points["firstName"]!! as? String)
-                let lastName = (points["lastName"] as? String == nil ? "NO Name" : points["lastName"]!! as? String)
-                let mediaURL = (points["mediaURL"] as? String == nil ? "NO LINK" : points["mediaURL"]!! as? String)
+                
+                let firstName = (points.firstName == nil ? "NO Name" : points.firstName)
+                let lastName = (points.lastName  == nil ? "NO Name" : points.lastName)
+                let mediaURL = (points.mediaURL  == nil ? "NO LINK" : points.mediaURL)
                 
                 let annotation = MKPointAnnotation()
                 annotation.coordinate = coordinations
-                annotation.title = "\(firstName!) \(lastName!)"
+                annotation.title = "\(firstName) \(lastName)"
                 annotation.subtitle = mediaURL
                 
                 annotationsArray.append(annotation)
@@ -241,17 +243,17 @@ class MainController {
         ParseClient().getStudentsLocation(nil, nil, "-updatedAt", uniqueID) {
             (success, error) in
             guard error == nil else {
-                MainController().createAlertWithOkButton("System Error", "Unknown Error! \(error!)", view)
+                self.createAlertWithOkButton("System Error", "Unknown Error! \(error!)", view)
                 return
             }// end of clousure
             
             guard let results = success! as? [AnyObject]else {
-                MainController().createAlertWithOkButton("System Error", "Error Checking Previous Posts.", view)
+                self.createAlertWithOkButton("System Error", "Error Checking Previous Posts.", view)
                 return
             }
             
             if results.count > 0{
-                MainController().createAlertWithTwoOptions("Duplicate", "You've already posted your location", "Overwrite", view)
+                self.createAlertWithTwoOptions("Duplicate", "You've already posted your location", "Overwrite", view)
             }else{
                 let postNewLink = view.storyboard?.instantiateViewController(withIdentifier: "postNewLink")
                 performUIUpdatesOnMain {
@@ -268,16 +270,15 @@ class MainController {
         UdacityClient().deleteSession() {
             (success, error) in
             guard error == nil else{
-                MainController().createAlertWithOkButton("System Error", "Coudln't Logout!", view)
+                self.createAlertWithOkButton("System Error", "Coudln't Logout!", view)
                 pressedBtn.isEnabled = true
                 return
             }
             SharedManager.sharedInstance.locationsDictionary = []
             SharedManager.sharedInstance.publicUserData = [:]
             
-            let VC = view.storyboard?.instantiateViewController(withIdentifier: "loginViewController")
             performUIUpdatesOnMain {
-                view.present(VC!, animated: true, completion: nil)
+                view.dismiss(animated: true, completion: nil)
             }
         }
     }
@@ -315,7 +316,7 @@ class MainController {
 // A Shared Instanace (Singleton) to store the data and access it.
 class SharedManager {
     static let sharedInstance = SharedManager()
-    var locationsDictionary:[AnyObject]? = [AnyObject]()
+    var locationsDictionary:[StudentInformation]? = [StudentInformation]()
     var publicUserData: [String:AnyObject]? = [:]
 }
 

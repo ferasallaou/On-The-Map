@@ -12,8 +12,8 @@ class MapsTableViewController: UIViewController {
 
     let parseClient = ParseClient()
     let appDelegate = AppDelegate()
-    var mLocationsArray:[AnyObject] = [AnyObject]()
-    let mainController = MainController()
+    var mLocationsArray:[StudentInformation] = [StudentInformation]()
+    let mainController = MainClient()
     
     @IBOutlet weak var pointsTable: UITableView!
     override func viewDidLoad() {
@@ -28,17 +28,17 @@ class MapsTableViewController: UIViewController {
     }
     
     @IBAction func refreshPoints(_ sender: Any) {
-        parseClient.getStudentsLocation(nil, nil, "-updatedAt",nil) {
+        parseClient.getStudentsLocation(100, nil, "-updatedAt",nil) {
             (response, error) in
             
             guard error == nil else{
-                MainController().createAlertWithOkButton("System Error", "Coudln't Refresh!", self)
+                self.mainController.createAlertWithOkButton("System Error", "Coudln't Refresh!", self)
                 return
             }
             
             performUIUpdatesOnMain {
-                SharedManager.sharedInstance.locationsDictionary = response as? [AnyObject]
-                self.mLocationsArray = response as! [AnyObject]
+                SharedManager.sharedInstance.locationsDictionary = response as? [StudentInformation]
+                self.mLocationsArray = response as! [StudentInformation]
                 self.pointsTable.reloadData()
             }
         }
@@ -46,11 +46,11 @@ class MapsTableViewController: UIViewController {
     
     @IBAction func logout(_ sender: AnyObject) {
              let myBtn = sender as! UIBarItem
-        mainController.logoutFromUdacity(self, myBtn)
+        self.mainController.logoutFromUdacity(self, myBtn)
     }
     
     @IBAction func postNewLink(_ sender: Any) {
-      mainController.postNewLink(self)
+      self.mainController.postNewLink(self)
     }
 
 

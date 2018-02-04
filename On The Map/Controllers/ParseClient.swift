@@ -11,10 +11,10 @@ import Foundation
 
 class ParseClient{
     
-    let mainController = MainController()
+    let mainController = MainClient()
     
 
-    func getStudentsLocation(_ limit: Int?, _ skip: Int?, _ order: String?,_ withUniqueID: String?,_ studentLocationCompletionHandler: @escaping (_ success: AnyObject?, _ error: String?) -> Void){
+    func getStudentsLocation(_ limit: Int?, _ skip: Int?, _ order: String?,_ withUniqueID: String?,_ studentLocationCompletionHandler: @escaping (_ success: [StudentInformation]?, _ error: String?) -> Void){
         
         var paramsObj = [String:AnyObject]()
         limit != nil ? paramsObj["limit"] = limit as AnyObject : pass()
@@ -41,13 +41,22 @@ class ParseClient{
             if rejected != nil {
                 studentLocationCompletionHandler(nil, rejected)
             }else{
-                
-            guard let dataObj = success!["results"] else {
-                studentLocationCompletionHandler(nil, "Error Getting Results")
-                return
+                var myArr: [StudentInformation] = [StudentInformation]()
+                for oldArr in success!["results"] as! NSArray{
+                    let hmm = oldArr as! [String: AnyObject]
+                    let obj = StudentInformation(dictionary: hmm)
+                    myArr.append(obj!)
                 }
-                
-                studentLocationCompletionHandler(dataObj, nil)
+//
+//                print("This is \(myArr) && \(rejected)")
+//                guard let dataObj = success!["results"] as? [String: Any] else {
+//                studentLocationCompletionHandler(nil, "Error Getting Results")
+//                return
+//                }
+//             print(dataObj)
+//                let studentsInfo = [StudentInformation(dictionary: dataObj)!]
+//                print(studentsInfo)
+                studentLocationCompletionHandler(myArr, nil)
             }
         }
     }
@@ -62,7 +71,7 @@ class ParseClient{
             (success, error) in
             
             guard error == nil else {
-                postStudentCompletionHandler(nil, "\(error!.description)")
+                postStudentCompletionHandler(nil, "\(error!)")
                 return
             }
             

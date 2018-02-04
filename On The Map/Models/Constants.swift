@@ -8,7 +8,7 @@
 
 import Foundation
 
-extension MainController
+extension MainClient
 {
     struct Methods {
         

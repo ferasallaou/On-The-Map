@@ -11,10 +11,11 @@ import MapKit
 
 class PostNewLinkViewController: UIViewController, MKMapViewDelegate{
 
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var confirmLocationButton: UIButton!
     @IBOutlet weak var resultsMap: MKMapView!
     @IBOutlet weak var searchButton: UIButton!
-    @IBOutlet weak var mediaURLTextField: UITextView!
+    @IBOutlet weak var mediaURLTextField: UITextField!
     @IBOutlet weak var locationTextField: UITextField!
     var mapItems = [MKMapItem]()
     
@@ -28,6 +29,7 @@ class PostNewLinkViewController: UIViewController, MKMapViewDelegate{
         self.confirmLocationButton.isHidden = true
         self.mediaURLTextField.delegate = self
         self.locationTextField.delegate = self
+        self.activityIndicator.isHidden = true
 
         // Do any additional setup after loading the view.
     }
@@ -46,13 +48,13 @@ class PostNewLinkViewController: UIViewController, MKMapViewDelegate{
             ParseClient().postStudentLocation(self.objectToPost){
                 (response, error) in
                 guard error == nil else {
-                MainController().createAlertWithOkButton("Error in POST", "Error in Posting Your Location", self)
+                MainClient().createAlertWithOkButton("Error in POST", "Error in Posting Your Location", self)
                     self.confirmLocationButton.isEnabled = true
                     return
                 }
 
                 guard let _ = response!["objectId"] as? String else {
-                    MainController().createAlertWithOkButton("Error in POST", "Error in Getting Posted ID", self)
+                    MainClient().createAlertWithOkButton("Error in POST", "Error in Getting Posted ID", self)
                     self.confirmLocationButton.isEnabled = true
                     return
                 }
@@ -61,25 +63,33 @@ class PostNewLinkViewController: UIViewController, MKMapViewDelegate{
                 self.dismiss(animated: true, completion: nil)
             }
         }else{
-          MainController().createAlertWithOkButton("Empty Fields", "Please enter a valid link", self)
+          MainClient().createAlertWithOkButton("Empty Fields", "Please enter a valid link", self)
             self.confirmLocationButton.isEnabled = true
         }
     }
     
     @IBAction func findOnTheMap(_ sender: Any) {
+        view.addSubview(self.activityIndicator)
+        self.activityIndicator.isHidden = false
+        self.activityIndicator.startAnimating()
+        
        let searchLocation = locationTextField.text!
         if searchLocation != "" {
             let searchRequest = MKLocalSearchRequest()
             searchRequest.naturalLanguageQuery = searchLocation
             let mapSearch = MKLocalSearch(request: searchRequest)
             mapSearch.start(completionHandler: { (response, error) in
+                self.activityIndicator.stopAnimating()
+                self.activityIndicator.isHidden = true
+                
+                
                 guard error == nil else {
-        MainController().createAlertWithOkButton("Maps", "Error getting Your location \(error.debugDescription)", self)
+                    MainClient().createAlertWithOkButton("Maps", "Error getting Your location \(error.debugDescription)", self)
                     return
                 }
                 
                 guard let response = response else {
-                   MainController().createAlertWithOkButton("Maps", "Error getting Your location", self)
+                   MainClient().createAlertWithOkButton("Maps", "Error getting Your location", self)
                     return
                 }
                 
@@ -99,7 +109,7 @@ class PostNewLinkViewController: UIViewController, MKMapViewDelegate{
                     let span = MKCoordinateSpanMake(4.00, 4.00)
                     let myRegoin = MKCoordinateRegionMake(locationFromCoordinates, span)
                     self.resultsMap.setRegion(myRegoin, animated: true)
-                    let mapAnnotations = MainController().createMapAnnotations(false, self.mapItems)
+                    let mapAnnotations = MainClient().createMapAnnotations(false, self.mapItems)
                     self.resultsMap.addAnnotations(mapAnnotations)
                     self.resultsMap.isHidden = false
                     self.confirmLocationButton.isHidden = false
@@ -108,7 +118,9 @@ class PostNewLinkViewController: UIViewController, MKMapViewDelegate{
                 
             })
         }else{
-           MainController().createAlertWithOkButton("Empty Fields", "Please fill in Your Location", self)
+            self.activityIndicator.stopAnimating()
+            self.activityIndicator.isHidden = true
+           MainClient().createAlertWithOkButton("Empty Fields", "Please fill in Your Location", self)
         }
     }
     

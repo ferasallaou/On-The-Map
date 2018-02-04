@@ -9,24 +9,14 @@
 import Foundation
 import UIKit
 
-extension PostNewLinkViewController: UITextViewDelegate, UITextFieldDelegate{
+extension PostNewLinkViewController:  UITextFieldDelegate{
     
-    func textViewDidBeginEditing(_ textView: UITextView) {
-        if self.mediaURLTextField.text == "What are you studying?" {
-        self.mediaURLTextField.text = ""
-        }
-    }
-    
-    func textViewDidEndEditing(_ textView: UITextView) {
-        if self.mediaURLTextField.text == "" {
-            self.mediaURLTextField.text = "What are you studying?"
-        }
-    }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
     }
+    
     
     func checkURLIfValid(_ urlString: String?) -> Bool {
         guard let urlString = urlString,

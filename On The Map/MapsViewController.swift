@@ -13,7 +13,7 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
 
     @IBOutlet weak var pointsMapView: MKMapView!
     var pointsArray = [MKPointAnnotation]()
-    let mainController = MainController()
+    let mainController = MainClient()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,18 +49,18 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     }
     
     @IBAction func refreshPoints(_ sender: Any) {
-        ParseClient().getStudentsLocation(nil, nil, "-updatedAt",nil) {
+        ParseClient().getStudentsLocation(100, nil, "-updatedAt",nil) {
             (response, error) in
             
             guard error == nil else{
-                MainController().createAlertWithOkButton("System Error", "Coudln't Refresh!", self)
+                self.mainController.createAlertWithOkButton("System Error", "Coudln't Refresh!", self)
                 return
             }
             
             performUIUpdatesOnMain {
                 self.pointsMapView.removeAnnotations(self.pointsArray)
-                SharedManager.sharedInstance.locationsDictionary = response as? [AnyObject]
-                self.pointsArray = MainController().createMapAnnotations(true, nil)
+                SharedManager.sharedInstance.locationsDictionary = response as? [StudentInformation]
+                self.pointsArray = self.mainController.createMapAnnotations(true, nil)
                 self.pointsMapView.addAnnotations(self.pointsArray)
             }
         }
@@ -68,11 +68,11 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     
     @IBAction func logout(_ sender: AnyObject) {
         let myBtn = sender as! UIBarItem
-        mainController.logoutFromUdacity(self, myBtn)
+        self.mainController.logoutFromUdacity(self, myBtn)
     }
     
     @IBAction func postNewLink(_ sender: Any) {
-        mainController.postNewLink(self)
+        self.mainController.postNewLink(self)
     }
     
     func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
@@ -80,7 +80,9 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
             let app = UIApplication.shared
             if let toOpen = view.annotation?.subtitle! {
                 let mURL = (toOpen.contains("http") ? URL(string: toOpen) : URL(string: "http://\(toOpen)"))
-                app.open(mURL!, options: [:], completionHandler: nil)
+                if app.canOpenURL(mURL!) {
+                    app.open(mURL!, options: [:], completionHandler: nil)
+                }
             }
         }
     }

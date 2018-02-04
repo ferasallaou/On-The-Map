@@ -10,7 +10,7 @@ import Foundation
 
 
 class UdacityClient {
-    let mainController  = MainController()
+    let mainController  = MainClient()
     
     
     func getSessionID(_ username:String, _ password: String, _ getSessionIDCompletionHandler: @escaping (_ success: [String:AnyObject]?, _ rejected: String?) -> Void){
@@ -26,9 +26,16 @@ class UdacityClient {
 
         mainController.makePostRequest( mainController.constants.getSession , [:], parsedBody!){
             (response, error) in
+
             if error != nil {
-                getSessionIDCompletionHandler(nil, error.debugDescription)
+                getSessionIDCompletionHandler(nil, error)
             }else{
+                
+                if let invalidAccount = response!["error"] as? String {
+                  getSessionIDCompletionHandler(nil, invalidAccount)
+                    return
+                }
+                
                 guard let sessionObj = response!["session"] as? [String: AnyObject] else {
                     getSessionIDCompletionHandler(nil, "Couldn't get Session Object")
                     return
@@ -57,7 +64,14 @@ class UdacityClient {
             if error != nil {
                 publicUserDataCompletionHandler(nil, error)
             }else{
-                publicUserDataCompletionHandler(success, nil)
+                
+                guard let userData = success!["user"] as? [String:AnyObject] else {
+                    publicUserDataCompletionHandler(nil, "Couldn't get Data")
+                    return
+                }
+                
+                
+                publicUserDataCompletionHandler(userData, nil)
             }
         }
     }

@@ -19,9 +19,9 @@ extension MapsTableViewController: UITableViewDelegate, UITableViewDataSource {
         let myCell = UITableViewCell(style: .subtitle, reuseIdentifier: "mapsCell")
         let points = mLocationsArray[indexPath.row]
 
-        let firstName = (points["firstName"] as? String == nil ? "NO Name" : points["firstName"]!! as? String)
-        let lastName = (points["lastName"] as? String == nil ? "NO Name" : points["lastName"]!! as? String)
-        let mediaURL = (points["mediaURL"] as? String == nil ? "NO LINK" : points["mediaURL"]!! as? String)
+        let firstName = (points.firstName as? String == nil ? "NO Name" : points.firstName as? String)
+        let lastName = (points.lastName as? String == nil ? "NO Name" : points.lastName as? String)
+        let mediaURL = (points.mediaURL as? String == nil ? "NO LINK" : points.mediaURL as? String)
         
         
         myCell.textLabel?.text = "\(firstName!) \(lastName!)"
@@ -35,9 +35,11 @@ extension MapsTableViewController: UITableViewDelegate, UITableViewDataSource {
         
         let app = UIApplication.shared
         
-        if let linkToOpen = getRow["mediaURL"] as? String {
+        if let linkToOpen = getRow.mediaURL as? String {
             let mURL = (linkToOpen.contains("http") ? URL(string: linkToOpen) : URL(string: "http://\(linkToOpen)"))
-            app.open(mURL!, options: [:], completionHandler: nil)
+            if app.canOpenURL(mURL!) {
+                app.open(mURL!, options: [:], completionHandler: nil)
+            }
         }
         
 
